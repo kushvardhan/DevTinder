@@ -1,54 +1,43 @@
+require('dotenv').config();
 const express = require('express');
+const cookieParser = require('cookie-parser');
+const { connectDB } = require('./config/database');
+const { authRouter } = require('./routes/AuthRoute');
+const { profileRouter } = require('./routes/ProfileRoute');
+const { requestRouter } = require('./routes/RequestRouter');
+const { userRouter } = require('./routes/UserRoute');
+const cors = require('cors');
+
 const app = express();
 
-app.get('/',(req,res)=>{
-    res.send("Hey Yo");
-})
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],  
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
-// app.get('/user',(req,res)=>{
-//     res.send('User GET route');
-// })
-app.get('/user/:id',(req,res)=>{        // DYNAMIC ROUTING
-    const userId = req.params.id;
-    res.send(`/user/${userId} route`);
-})
-app.get('/user/:id/:name/:password',(req,res)=>{        // DYNAMIC ROUTING
-    console.log(req.params);
-    res.send(`Dynamic data `);
-})
-app.get('/user',(req,res)=>{
-    const {name,id} = req.query;
-    res.send(`${name} & ${id}`);
-})
-// app.get('/use?r',(req,res)=>{       // here the e is optional , means if u make a API call at /user or /usr still this route will work
-//     res.send('using ? optional ');
-// })
-    app.get('/u(se)?r',(req,res)=>{       // here the (se) is grouped together and are optional , means if u make a API call at /user or /ur still this route will work
-        res.send('using ()? optional ');
-    })
-// app.get('/use+r',(req,res)=>{   // here the route will work if u use /user or /useeer or /useeeeeeeeeer . the Route will still work 
-//     res.send(`/use+r route`);
-// })
-app.get('/use*r',(req,res)=>{   // here the route will work if u put anything in the place of * like /useKushr or /use8494ewr . the Route will still work 
-    res.send(`/use*r route`);
-})
-app.get(/.*user$/,(req,res)=>{   // this is REGEX , if your starting routing contain any thing but ends with user  
-    res.send(`Regex Route`);
-})
-app.get(/user/,(req,res)=>{   // this is REGEX , if your route contain user  
-    res.send(`Regex Route with no special character`);
-})
+// Middleware setup
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.post('/user',(req,res)=>{
-    res.send({name: "Kush" , age : "20"});
-})
-app.patch('/user',(req,res)=>{
-    res.send('Patch request from User Route');
-})
-app.delete('/user',(req,res)=>{
-    res.send("Deleted User");
-})
+// Routes
+app.use('/', authRouter);
+app.use('/profile', profileRouter);
+app.use('/request', requestRouter);
+app.use('/user', userRouter);
 
-app.listen(4000,()=>{
-    console.log("Server is Started,");
-})
+// Handle preflight requests (OPTIONS method)
+app.options('*', cors(corsOptions)); 
+
+// Connect to the database and start the server
+connectDB()
+  .then(() => {
+    console.log('Connected to Database');
+    app.listen(4000, () => console.log('Server started on port 4000'));
+  })
+  .catch((error) => {
+    console.error('Error connecting to Database:', error);
+  });
