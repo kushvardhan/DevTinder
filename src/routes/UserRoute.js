@@ -4,31 +4,35 @@ const ConnectionRequest = require('../models/connectionRequest');
 const User = require('../models/UserSchema');
 const userRouter = express.Router();
 
-// Get the list of connections (accepted)
 userRouter.get('/connection', userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
 
         const connections = await ConnectionRequest.find({
             $or: [
-                { fromUserId: userId, status: 'accepted' },
                 { toUserId: userId, status: 'accepted' },
+                { fromUserId: userId, status: 'accepted' },
             ],
         })
         .populate('fromUserId', ['firstName', 'lastName', 'photoUrl', 'about', 'skills', 'age', 'gender'])
-        .populate('toUserId', ['firstName', 'lastName', 'photoUrl', 'about', 'skills', 'age', 'gender']);
-        
-        console.log(connections);
+        .populate('toUserId', ['firstName', 'lastName', 'photoUrl', 'about', 'skills', 'age', 'gender'])
+
+        const data = connections.map((row)=> {
+            if(row.fromUserId._id.toString() === userId.toString() ){
+               return row.toUserId;
+            }
+            return row.fromUserId;
+        });
+
         res.status(200).json({
             message: 'Your connection list.',
-            data: connections,
+            data,
         });
     } catch (err) {
         res.status(500).json({ message: 'Error fetching connections', error: err.message });
     }
 });
 
-// Get the list of received requests (interested)
 userRouter.get('/request/recieved', userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
@@ -57,6 +61,12 @@ userRouter.get('/feed', userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
 
+        const page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10;
+        limit = limit > 50 ? 50 : limit;
+
+        const skip = (page-1)*limit;
+
         const connectionRequests = await ConnectionRequest.find({
             $or: [{ fromUserId: userId }, { toUserId: userId }],
         }).select("fromUserId toUserId");
@@ -69,9 +79,14 @@ userRouter.get('/feed', userAuth, async (req, res) => {
 
         hideUserFromFeed.add(userId.toString());
 
-        const users = await User.find({ _id: { $nin: Array.from(hideUserFromFeed) } });
+        const users = await User.find({
+            $and : [
+                { _id: { $nin: Array.from(hideUserFromFeed) }, },
+                { _id: { $ne : userId } },
+            ]
+        }).select(['firstName', 'lastName', 'photoUrl', 'about', 'skills', 'age', 'gender']).skip(skip).limit(limit);
 
-        res.json(users);
+        res.json({ data: users });
 
     } catch (err) {
         console.error('Error fetching feed:', err);

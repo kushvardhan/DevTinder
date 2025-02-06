@@ -13,10 +13,8 @@ authRouter.post('/signup', async (req, res) => {
     try {
         const { firstName, lastName, email, password, age, gender } = req.body;
 
-        // Hash the password
         const hashPassword = await bcrypt.hash(password, 10);
 
-        // Create a new user
         const user = await User.create({
             firstName,
             lastName,
@@ -43,31 +41,27 @@ authRouter.post('/signup', async (req, res) => {
     }
 });
 
-
 authRouter.post('/login', async (req, res) => {          
     try {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(404).send('User not found');
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
-        // Compare passwords
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (isPasswordMatch) {
-            // Generate JWT
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-            // Set cookie with token
             res.cookie('token', token, {
-                expires: new Date(Date.now() + 8 * 3600000), // 8 hours
+                expires: new Date(Date.now() + 8 * 3600000),
                 httpOnly: true,
             });
-            res.send(user);
+            res.json({ data: user });
         } else {
-            res.status(400).send('Wrong Credential');
+            res.status(400).json({ error: 'Wrong Credential' });
         }
     } catch (err) {
-        res.status(500).send('Error: ' + err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -75,7 +69,7 @@ authRouter.post('/logout', (req, res) => {
     res
       .cookie('token', '', { expires: new Date(0), httpOnly: true })
       .status(200)
-      .send('Logged out successfully');
-  });
+      .json({ message: 'Logged out successfully' });
+});
 
 module.exports = { authRouter };

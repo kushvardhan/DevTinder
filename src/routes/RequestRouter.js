@@ -17,7 +17,7 @@ requestRouter.post('/send/:status/:toUserId', userAuth, async (req, res) => {
 
         const validStatuses = ['ignored', 'interested'];
         if (!validStatuses.includes(status)) {
-            return res.status(400).send(`${status} is invalid. Allowed values: ignored, interested`);
+            return res.status(400).json({ message: `${status} is invalid. Allowed values: ignored, interested` });
         }
 
         const toUser = await User.findById(toUserId);
@@ -39,13 +39,12 @@ requestRouter.post('/send/:status/:toUserId', userAuth, async (req, res) => {
         const connectionRequest = new ConnectionRequest({ fromUserId, toUserId, status });
         await connectionRequest.save();
 
-        res.status(201).send(`${req.user.firstName} has sent a ${status} request to ${toUserId}`);
+        res.status(201).json({ message : `${req.user.firstName} has sent a ${status} request to ${toUserId}` });
     } catch (err) {
         console.error(err);
-        res.status(400).send('Error: ' + err.message);
+        res.status(400).json({ error: err.message });
     }
 });
-
 
 requestRouter.post('/reviews/:status/:RequestId', userAuth, async (req, res) => {
     try {
@@ -53,33 +52,26 @@ requestRouter.post('/reviews/:status/:RequestId', userAuth, async (req, res) => 
         const requestId = req.params.RequestId;
         const status = req.params.status;
 
-        console.log("Logged in user ID:", loggedInUser._id);
-        console.log("Request ID being searched for:", requestId);
-
         if (!mongoose.Types.ObjectId.isValid(requestId)) {
             return res.status(400).json({ message: 'Invalid Request ID format' });
         }
 
         const validStatuses = ['rejected', 'accepted'];
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({
-                message: `Invalid status. Allowed values: ${validStatuses.join(', ')}`
-            });
+            return res.status(400).json({ message: `Invalid status. Allowed values: ${validStatuses.join(', ')}` });
         }
 
         const connectionRequest = await ConnectionRequest.findOne({
             _id: requestId,
             $or: [
-                { toUserId: loggedInUser._id }, 
+                { toUserId: loggedInUser._id },
                 { fromUserId: loggedInUser._id }
             ],
             status: 'interested'
         });
 
         if (!connectionRequest) {
-            return res.status(404).json({
-                message: `Connection request not found for Request ID: ${requestId} and User ID: ${loggedInUser._id}`
-            });
+            return res.status(404).json({ message: `Connection request not found for Request ID: ${requestId} and User ID: ${loggedInUser._id}` });
         }
 
         connectionRequest.status = status;
@@ -91,10 +83,7 @@ requestRouter.post('/reviews/:status/:RequestId', userAuth, async (req, res) => 
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({
-            message: 'Server Error',
-            error: err.message
-        });
+        res.status(500).json({ message: 'Server Error', error: err.message });
     }
 });
 
