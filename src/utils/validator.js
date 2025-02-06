@@ -1,6 +1,5 @@
 const validator = require('validator');
 
-// Validator for Signup Data
 function validatorSignupData(req) {
     const { firstName, email, password } = req.body;
 
@@ -17,12 +16,10 @@ function validatorSignupData(req) {
     }
 }
 
-// Validator for Profile Edit Data
 function validateProfileEditData(req) {
     const allowedEditFields = ['firstName', 'lastName', 'gender', 'age', 'skills', 'about', 'photoUrl'];
     const fieldsInRequest = Object.keys(req.body);
 
-    // Ensure every field in the request is allowed
     return fieldsInRequest.every((field) => allowedEditFields.includes(field));
 }
 

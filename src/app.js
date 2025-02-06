@@ -23,16 +23,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Routes
 app.use('/', authRouter);
 app.use('/profile', profileRouter);
 app.use('/request', requestRouter);
 app.use('/user', userRouter);
 
-// Handle preflight requests (OPTIONS method)
 app.options('*', cors(corsOptions)); 
 
-// Connect to the database and start the server
+
 connectDB()
   .then(() => {
     console.log('Connected to Database');

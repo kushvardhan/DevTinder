@@ -8,18 +8,18 @@ const userSchema = mongoose.Schema(
             required: [true, 'First name is required'],
             minLength: 2,
             maxLength: 30, 
-            index : true,       // much prefereable to use 'unique : true' coz it creates the unique index
-        },                      // but we can't put unique in this field coz name can be duplicates
+            index : true,      
+        },                     
         lastName: {
             type: String,
         },
         email: {
             type: String,
-            lowercase: true,       // the email id will be stored in lowercase
+            lowercase: true,  
             required: [true, 'Email is required'],
-            unique: true, // Ensures no duplicate emails in the database
-            trim: true,   // Removes leading/trailing spaces
-            minLength: 4,  // email should have the name of minimum length 4
+            unique: true, 
+            trim: true,  
+            minLength: 4,  
         },
         password: {
             type: String,
@@ -27,12 +27,12 @@ const userSchema = mongoose.Schema(
         },
         age: {
             type: Number,
-            min: [0, 'Age must be positive'], // Optional: Minimum age validation
+            min: [0, 'Age must be positive'],
             max: 90,
         },
         gender: {
             type: String,
-            validate(value) {                    // Validate function 
+            validate(value) {               
                 if (!["Male", "Female", "Other"].includes(value)) {
                     throw new Error('Gender should only be Male, Female, Other.');
                 }
@@ -47,11 +47,11 @@ const userSchema = mongoose.Schema(
             trim: true,
         },
         skills: {
-            type: [String], // Array of strings for better validation
+            type: [String], 
         },
     },
     {
-        timestamps: true // This will add 'createdAt' and 'updatedAt' fields
+        timestamps: true 
     }
 );
 
@@ -60,7 +60,7 @@ userSchema.index({firstName:1,lastName:1});
 userSchema.methods.getJWT = async function () {
 
     const user = this ;
-    const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' }); // token expires in 7day
+    const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     return token ;
 }
 
