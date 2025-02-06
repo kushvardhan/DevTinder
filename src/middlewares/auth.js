@@ -8,16 +8,16 @@ const userAuth = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Find user by ID
         const user = await User.findById(decoded._id);
         if (!user) throw new Error('User not found');
 
-        // Attach user to the request object
         req.user = user;
+        console.log(req.user); // Log user data to check if it's assigned correctly
         next();
     } catch (err) {
         res.status(401).send('Unauthorized: ' + err.message);
     }
 };
+
 
 module.exports = { userAuth };

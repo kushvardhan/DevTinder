@@ -9,22 +9,42 @@ const cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
 
-
 authRouter.post('/signup', async (req, res) => {
     try {
-        //  validatorSignupData(req); // Validate the input data
-        const { firstName, lastName, email, password, age, skills } = req.body;
+        const { firstName, lastName, email, password, age, gender } = req.body;
 
+        // Hash the password
         const hashPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ firstName, lastName, email, password: hashPassword, age, skills });
-        res.status(201).send('User Added');
+
+        // Create a new user
+        const user = await User.create({
+            firstName,
+            lastName,
+            email,
+            password: hashPassword,
+            age,
+            gender,
+        });
+
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+        res.cookie('token', token, {
+            expires: new Date(Date.now() + 8 * 3600000),
+            httpOnly: true,
+        });
+
+        res.status(201).json({ message: "New User Added", user });
     } catch (err) {
-        res.status(400).send('Error: ' + err.message);
+        if (err.code === 11000) {
+            res.status(400).json({ error: "Email already exists" });
+        } else {
+            res.status(500).json({ error: "Something went wrong" });
+        }
     }
 });
 
 
-authRouter.post('/login', async (req, res) => {
+authRouter.post('/login', async (req, res) => {          
     try {
         const { email, password } = req.body;
 

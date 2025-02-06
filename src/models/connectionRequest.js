@@ -24,18 +24,16 @@ const connectionRequestSchema = mongoose.Schema(
     { timestamps: true }
 );
 
-// Compound index to ensure no duplicate requests
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
 
-// Pre-save validation to prevent self-connections
 connectionRequestSchema.pre('save', function (next) {
-    if (this.fromUserId.equals(this.toUserId)) {
-        return next(new Error("Can't send a connection request to yourself"));
+    const connectionRequest = this;
+    if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
+        throw new Error("Cannot send connection request to yourself.");
     }
     next();
 });
 
-// Model initialization
 const ConnectionRequest = mongoose.model('ConnectionRequest', connectionRequestSchema);
 
 module.exports = ConnectionRequest;
