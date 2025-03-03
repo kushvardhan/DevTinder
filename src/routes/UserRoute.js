@@ -35,22 +35,20 @@ userRouter.get('/connection', userAuth, async (req, res) => {
 
 userRouter.get('/request/recieved', userAuth, async (req, res) => {
     try {
-        const userId = req.user._id;
+        const loggedInUser = req.user;
 
-        const requests = await ConnectionRequest.find({
-            toUserId: userId,
+        const connectionRequests = await ConnectionRequest.find({
+            toUserId: loggedInUser._id,
             status: 'interested',
-        }).populate('fromUserId', ['firstName', 'lastName', 'photoUrl', 'about', 'skills', 'age', 'gender']);
+        }).populate('fromUserId', 'firstName lastName photoUrl about skills age gender');
 
-        if (!requests.length) {
+        if (!connectionRequests.length) {
             return res.status(404).json({ message: 'No one is interested in you.' });
         }
 
-        const data = requests.map((row) => row.fromUserId);
-
         res.status(200).json({
             message: 'The users who are interested in connecting with you.',
-            data,
+            data : connectionRequests
         });
     } catch (err) {
         res.status(500).json({ message: 'Error fetching received requests', error: err.message });
