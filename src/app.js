@@ -10,15 +10,22 @@ const cors = require('cors');
 
 const app = express();
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 const corsOptions = {
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],  
+  methods: ['GET', 'POST','PATCH', 'DELETE'],  
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 app.use(cors(corsOptions));
 
-// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

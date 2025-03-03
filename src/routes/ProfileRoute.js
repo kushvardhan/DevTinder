@@ -7,8 +7,8 @@ const profileRouter = express.Router();
 
 profileRouter.get('/view', userAuth, async (req, res) => {
     try {
-        const user = req.user;
-        res.status(200).json(user);
+        const data = req.user;
+        res.status(200).json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

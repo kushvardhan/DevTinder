@@ -10,7 +10,6 @@ function validatorSignupData(req) {
     if (!validator.isEmail(email)) {
         throw new Error('Invalid email address.');
     }
-
     if (!validator.isStrongPassword(password, { minLength: 8 })) {
         throw new Error('Password must be at least 8 characters long with uppercase, lowercase, and numbers.');
     }
